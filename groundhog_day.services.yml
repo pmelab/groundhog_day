@@ -1,0 +1,18 @@
+parameters:
+  groundhog_day:
+    datetime: "1983-01-14 6am"
+    module: "test_content"
+services:
+  groundhog_day.subscriber:
+    class: Drupal\groundhog_day\EventSubscriber\GroundhogDaySubscriber
+    arguments:
+      - '%groundhog_day%'
+    tags:
+      - {name: event_subscriber}
+  groundhog_day.executor:
+    class: Drupal\groundhog_day\GroundhogDayExecutor
+    arguments:
+    - '@entity_type.manager'
+    - '@default_content.exporter'
+    - '@default_content.importer'
+    - '%groundhog_day%'
