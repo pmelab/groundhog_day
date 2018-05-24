@@ -65,7 +65,7 @@ class GroundhogDayExecutor {
     mkdir($path, 0755, TRUE);
 
     foreach ($this->entityTypeManager->getDefinitions() as $entityType) {
-      if ($entityType instanceof ContentEntityTypeInterface && !$entityType->isInternal()) {
+      if ($entityType instanceof ContentEntityTypeInterface) {
         $storage = $this->entityTypeManager->getStorage($entityType->id());
         foreach ($storage->getQuery()->execute() as $entityId) {
           if ($entityType->id() === 'user' && in_array((int) $entityId, [0, 1])) {

@@ -5,6 +5,7 @@ namespace Drupal\groundhog_day\EventSubscriber;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\default_content\Event\DefaultContentEvents;
 use Drupal\default_content\Event\ImportEvent;
+use Drupal\node\Entity\Node;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -31,7 +32,7 @@ class GroundhogDaySubscriber implements EventSubscriberInterface {
   public static function getSubscribedEvents() {
     return[
       KernelEvents::REQUEST => ['alterRequestTime'],
-      DefaultContentEvents::IMPORT => ['alterUsers'],
+      DefaultContentEvents::IMPORT => ['alterImports'],
     ];
   }
 
@@ -47,13 +48,16 @@ class GroundhogDaySubscriber implements EventSubscriberInterface {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function alterUsers(ImportEvent $event) {
+  public function alterImports(ImportEvent $event) {
     /** @var \Drupal\Core\Config\ConfigFactoryInterface $factory */
     $config = $this->configFactory->getEditable('user.settings');
     $notify = $config->get('notify.status_activated');
     $config->set('notify.status_activated', FALSE);
     $config->save(TRUE);
+
+
     foreach ($event->getImportedEntities() as $entity) {
+
       if ($entity instanceof User) {
         $entity->setPassword($entity->getAccountName());
         $entity->set('status', TRUE);
@@ -62,6 +66,7 @@ class GroundhogDaySubscriber implements EventSubscriberInterface {
         }
         $entity->save();
       }
+
     }
     $config->set('notify.status_activated', $notify);
     $config->save(TRUE);

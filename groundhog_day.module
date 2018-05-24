@@ -1,0 +1,21 @@
+<?php
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\groundhog_day\ModeratedContentField;
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function groundhog_day_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'content_moderation_state') {
+    // Attach a computed field that resolves a proper entity reference so
+    // the content moderation state can be exported.
+    $fields['moderated_entity'] = BaseFieldDefinition::create('entity_reference')
+      ->setName('moderated_entity')
+      ->setLabel(t('Moderated entity'))
+      ->setComputed(TRUE)
+      ->setClass(ModeratedContentField::class)
+      ->setInternal(FALSE);
+  }
+}
