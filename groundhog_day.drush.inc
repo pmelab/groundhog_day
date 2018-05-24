@@ -1,7 +1,7 @@
 <?php
 
 function groundhog_day_drush_command() {
-  return [
+  $commands = [
     'groundhog-day-update' => [
       'aliases' => ['ghdu'],
     ],
@@ -9,6 +9,7 @@ function groundhog_day_drush_command() {
       'aliases' => ['ghdr'],
     ],
   ];
+  return $commands;
 }
 
 function drush_groundhog_day_update() {

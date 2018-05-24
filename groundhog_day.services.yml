@@ -7,11 +7,13 @@ services:
     class: Drupal\groundhog_day\EventSubscriber\GroundhogDaySubscriber
     arguments:
       - '%groundhog_day%'
+      - '@config.factory'
     tags:
       - {name: event_subscriber}
   groundhog_day.executor:
     class: Drupal\groundhog_day\GroundhogDayExecutor
     arguments:
+    - '@module_handler'
     - '@entity_type.manager'
     - '@default_content.exporter'
     - '@default_content.importer'

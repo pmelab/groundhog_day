@@ -5,8 +5,10 @@ namespace Drupal\groundhog_day;
 
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\default_content\ExporterInterface;
 use Drupal\default_content\ImporterInterface;
+use Drupal\Driver\Exception\Exception;
 
 class GroundhogDayExecutor {
 
@@ -32,12 +34,19 @@ class GroundhogDayExecutor {
    */
   protected $module;
 
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
   public function __construct(
+    ModuleHandlerInterface $moduleHandler,
     EntityTypeManagerInterface $entityTypeManager,
     ExporterInterface $exporter,
     ImporterInterface $importer,
     array $parameters
   ) {
+    $this->moduleHandler = $moduleHandler;
     $this->entityTypeManager = $entityTypeManager;
     $this->exporter = $exporter;
     $this->importer = $importer;
@@ -45,8 +54,8 @@ class GroundhogDayExecutor {
   }
 
   public function update() {
-    if(!drush_module_exists($this->module)) {
-      drush_log("The {$this->module} could not be found. Make sure exists and is enabled.");
+    if(!$this->moduleHandler->moduleExists($this->module)) {
+      throw new \Exception("The {$this->module} module could not be found. Make sure exists and is enabled.");
       return;
     }
     $path = drupal_get_path('module', $this->module) . '/content';
@@ -56,7 +65,7 @@ class GroundhogDayExecutor {
     mkdir($path, 0755, TRUE);
 
     foreach ($this->entityTypeManager->getDefinitions() as $entityType) {
-      if ($entityType instanceof ContentEntityTypeInterface) {
+      if ($entityType instanceof ContentEntityTypeInterface && !$entityType->isInternal()) {
         $storage = $this->entityTypeManager->getStorage($entityType->id());
         foreach ($storage->getQuery()->execute() as $entityId) {
           if ($entityType->id() === 'user' && in_array((int) $entityId, [0, 1])) {
@@ -77,9 +86,8 @@ class GroundhogDayExecutor {
   }
 
   public function reset() {
-    if(!drush_module_exists($this->module)) {
-      drush_log("The {$this->module} could not be found. Make sure exists and is enabled.");
-      return;
+    if(!$this->moduleHandler->moduleExists($this->module)) {
+      throw new \Exception("The {$this->module} module could not be found. Make sure exists and is enabled.");
     }
     foreach ($this->entityTypeManager->getDefinitions() as $entityType) {
       if ($entityType instanceof ContentEntityTypeInterface) {
